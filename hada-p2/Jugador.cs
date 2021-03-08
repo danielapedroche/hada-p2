@@ -35,11 +35,7 @@ namespace Hada
         public static int maxAmonestaciones { get; set;}
         public static int maxFaltas { get; set; }
         public static int minEnergia { get; set; }
-        public static Random rand
-        {
-           private get { return new Random(); }
-           set { ; }
-        }
+        public static Random rand { private get; set; }
         public string nombre { get; private set; }
         public int puntos { get; set; }
         private int _amonestaciones;
@@ -53,9 +49,10 @@ namespace Hada
                 {
                     _amonestaciones = 0;
                 }
-                if ( (_amonestaciones > maxAmonestaciones) && (amonestacionesMaximoExcedido != null) )
+                if ( (value > maxAmonestaciones) && (amonestacionesMaximoExcedido != null) )
                 {
-                    amonestacionesMaximoExcedido(this, new AmonestacionesMaximoExcedidoArgs(_amonestaciones));
+                    _amonestaciones = value;
+                    amonestacionesMaximoExcedido(this, new AmonestacionesMaximoExcedidoArgs(value));
                 }
                 else
                 {
@@ -71,9 +68,10 @@ namespace Hada
             get { return _faltas; }
             set
             {
-                if ( (_faltas > maxFaltas) && (faltasMaximoExcedido != null) )
+                if ( (value > maxFaltas) && (faltasMaximoExcedido != null) )
                 {
-                    faltasMaximoExcedido(this, new FaltasMaximoExcedidoArgs(_faltas));
+                    _faltas = value;
+                    faltasMaximoExcedido(this, new FaltasMaximoExcedidoArgs(value));
                 }
                 else
                 {
@@ -96,9 +94,10 @@ namespace Hada
                 {
                     _energia = 100;
                 }
-                if ( (_energia < minEnergia) && (energiaMinimaExcedida != null) )
+                if ( (value < minEnergia) && (energiaMinimaExcedida != null) )
                 {
-                    energiaMinimaExcedida(this, new EnergiaMinimaExcedidaArgs(_energia));
+                    _energia = value;
+                    energiaMinimaExcedida(this, new EnergiaMinimaExcedidaArgs(value));
                 }
                 else
                 {
@@ -136,7 +135,7 @@ namespace Hada
         }
         public bool todoOk()
         {
-            if( (this.amonestaciones <= maxAmonestaciones) && (this.faltas <= maxFaltas) && (this.energia >= minEnergia))
+            if( (amonestaciones <= maxAmonestaciones) && (faltas <= maxFaltas) && (energia >= minEnergia))
             {
                 return true;
             }
@@ -156,7 +155,7 @@ namespace Hada
         }
         public override string ToString()
         {
-            return "Puntos: " + this.puntos + "; Amonestaciones: " + this.amonestaciones + "; Faltas: " + this.faltas + "; Energía: " + this.energia + "%; Ok: " + this.todoOk();
+            return "Puntos: " + this.puntos + "; Amonestaciones: " + this.amonestaciones + "; Faltas: " + this.faltas + "; Energía: " + this.energia + "%; Ok: " + this.todoOk() + "\n";
         }
     }
 }
