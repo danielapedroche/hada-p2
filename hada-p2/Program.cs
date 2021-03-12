@@ -14,7 +14,7 @@ namespace Hada
 
             // Asignamos las variables estaticas de Jugador
             Jugador.maxAmonestaciones = 6; // Numero maximo de amonestaciones permitidas para ser expulsado
-            Jugador.maxFaltas = 8; // Numero maximo de faltas recibidas para lesionarse
+            Jugador.maxFaltas = 6; // Numero maximo de faltas recibidas para lesionarse
             Jugador.minEnergia = 1; // Energia del jugador
             Jugador.rand = new Random();
 

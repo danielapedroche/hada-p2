@@ -9,38 +9,69 @@ namespace Hada
     class Equipo
     {
         public static int minJugadores { get; set; }
-        public static int maxNumeroMovimientos { get; set; }
+        private static int _maxNumeroMovimientos;
+        public static int maxNumeroMovimientos
+        {
+            get
+            {
+                return _maxNumeroMovimientos;
+            }
+            set
+            {
+                if (value > 0)
+                {
+                    _maxNumeroMovimientos = value;
+                }
+                else
+                {
+                    _maxNumeroMovimientos = 1;
+                }
+            }
+        }
         public int movimientos { get; private set; }
         public string nombreEquipo { get; private set; }
-        private List<Jugador> jugadores = new List<Jugador>();
+
+        private Jugador[] jugadores;
         private List<Jugador> expulsados = new List<Jugador>();
         private List<Jugador> lesionados = new List<Jugador>();
-        private List<Jugador> retirados = new List<Jugador>(); 
-        public Equipo (int nj, string nom)
+        private List<Jugador> retirados = new List<Jugador>();
+        public Equipo(int nj, string nom)
         {
+            this.nombreEquipo = nom;
+            movimientos = 0;
+            jugadores = new Jugador[nj];
+
             for (int i = 0; i < nj; i++)
             {
                 string n = "jugador_" + i;
-                int a, f, p;
+                int a, f, p, e;
                 a = f = p = 0;
-                int e = 50;
-                Jugador j = new Jugador(n, a, f, p, e);
-                j.amonestacionesMaximoExcedido += cuandoAmonestacionesMaximoExcedido;
-                j.faltasMaximoExcedido += cuandoFaltasMaximoExcedido;
-                j.energiaMinimaExcedida += cuandoEnergiaMinimaExcedida;
-                jugadores.Add(j);
+                e = 50;
+                jugadores[i] = new Jugador(n, a, f, e, p);
+                jugadores[i].amonestacionesMaximoExcedido += cuandoAmonestacionesMaximoExcedido;
+                jugadores[i].faltasMaximoExcedido += cuandoFaltasMaximoExcedido;
+                jugadores[i].energiaMinimaExcedida += cuandoEnergiaMinimaExcedida;
             }
         }
         public bool moverJugadores()
         {
             bool ok = false;
-            foreach(Jugador j in jugadores)
+            int contarJugadores = 0;
+            foreach (Jugador j in jugadores)
             {
-                if(j.todoOk())
+                if (j.todoOk())
                 {
                     j.mover();
-                    ok = true;
+                    if (j.todoOk())
+                    {
+                        contarJugadores++;
+                    }
                 }
+            }
+            movimientos++;
+            if (contarJugadores >= minJugadores)
+            {
+                ok = true;
             }
             return ok;
         }
@@ -51,68 +82,65 @@ namespace Hada
         public int sumarPuntos()
         {
             int suma = 0;
-            foreach ( Jugador j in jugadores)
+            foreach (Jugador j in jugadores)
             {
                 suma += j.puntos;
             }
             return suma;
         }
-        public List<Jugador> getJugadoresExcedenLimiteAmonestaciones ()
+        public List<Jugador> getJugadoresExcedenLimiteAmonestaciones()
         {
-            return new List<Jugador>(expulsados);
+            return expulsados;
         }
-       private void cuandoAmonestacionesMaximoExcedido(object sender, AmonestacionesMaximoExcedidoArgs args)
-       {
+        public List<Jugador> getJugadoresExcedenLimiteFaltas()
+        {
+            return lesionados;
+        }
+        public List<Jugador> getJugadoresExcedenMinimoEnergia()
+        {
+            return retirados;
+        }
+        private void cuandoAmonestacionesMaximoExcedido(Object sender, AmonestacionesMaximoExcedidoArgs args)
+        {
             Jugador j = (Hada.Jugador)sender;
-            if(!expulsados.Contains(j))
-            {
-                lesionados.Add(j);
-            }
+
             Console.WriteLine("¡¡Número máximo excedido de amonestaciones. Jugador expulsado!!\n" +
                               "Jugador: " + j.nombre +
                               "\n Equipo: " + this.nombreEquipo +
                               "\n Amonestaciones: " + args.amonestaciones);
-       }
-       public List<Jugador> getJugadoresExcedenLimiteFaltas ()
-       {
-            return new List<Jugador>(lesionados);
-       }
-       private void cuandoFaltasMaximoExcedido(object sender, FaltasMaximoExcedidoArgs args)
-       {
-           Jugador j = (Hada.Jugador)sender;
-           if(!lesionados.Contains(j))
-            {
-                lesionados.Add(j);
-            }
-           Console.WriteLine("¡¡Número máximo excedido de faltas. Jugador retirado!!\n" +
-                             "Jugador: " + j.nombre +
-                             "\n Equipo: " + this.nombreEquipo +
-                             "\n Faltas: " + args.faltas);
-       }
-       public List<Jugador> getJugadoresExcedenMinimoEnergia()
-       {
-            return new List<Jugador>(retirados);
-       }
-       private void cuandoEnergiaMinimaExcedida(object sender, EnergiaMinimaExcedidaArgs args)
-       {
-           Jugador j = (Hada.Jugador)sender;
-           if ( !retirados.Contains(j))
-           {
-                retirados.Add(j);
-           }
-           Console.WriteLine("¡¡Energía´mínima excedida. Jugador retirado!!\n" +
-                             "Jugador: " + j.nombre +
-                             "\n Equipo: " + this.nombreEquipo +
-                             "\n Energía " + args.energia + "%");
+            expulsados.Add(j);
+        }
+        private void cuandoFaltasMaximoExcedido(Object sender, FaltasMaximoExcedidoArgs args)
+        {
+            Jugador j = (Hada.Jugador)sender;
 
-       }
+            Console.WriteLine("¡¡Número máximo excedido de faltas. Jugador retirado!!\n" +
+                              "Jugador: " + j.nombre +
+                              "\n Equipo: " + this.nombreEquipo +
+                              "\n Faltas: " + args.faltas);
+            lesionados.Add(j);
+        }
+        private void cuandoEnergiaMinimaExcedida(Object sender, EnergiaMinimaExcedidaArgs args)
+        {
+            Jugador j = (Hada.Jugador)sender;
+
+            Console.WriteLine("¡¡Energía´mínima excedida. Jugador retirado!!\n" +
+                              "Jugador: " + j.nombre +
+                              "\n Equipo: " + this.nombreEquipo +
+                              "\n Energía " + args.energia + "%");
+            retirados.Add(j);
+        }
         public override string ToString()
-        { 
-           string output = "[" + this.nombreEquipo + "] Puntos: " +
-                            this.sumarPuntos() + "; Expulsados: " + 
-                            expulsados.Count + "; Lesionados: " + 
-                            lesionados.Count + "; Retirados: " +
-                            retirados.Count + "\n";
+        {
+            string output = "[" + this.nombreEquipo + "] Puntos: " +
+                             this.sumarPuntos() + "; Expulsados: " +
+                             expulsados.Count + "; Lesionados: " +
+                             lesionados.Count + "; Retirados: " +
+                             retirados.Count + "\n";
+            foreach (Jugador j in jugadores)
+            {
+                output += j.ToString() + "\n";
+            }
             return output;
         }
     }

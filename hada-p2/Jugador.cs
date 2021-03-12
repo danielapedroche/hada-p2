@@ -8,70 +8,89 @@ namespace Hada
 {
     public class AmonestacionesMaximoExcedidoArgs : EventArgs
     {
+        public int amonestaciones { get; set; }
         public AmonestacionesMaximoExcedidoArgs(int a)
         {
             this.amonestaciones = a;
         }
-        public int amonestaciones { get; set; }
     }
     public class FaltasMaximoExcedidoArgs : EventArgs
     {
-        public FaltasMaximoExcedidoArgs(int a)
-        {
-            this.faltas = a;
-        }
         public int faltas { get; set; }
+        public FaltasMaximoExcedidoArgs(int f)
+        {
+            this.faltas = f;
+        }
     }
     public class EnergiaMinimaExcedidaArgs : EventArgs
     {
-        public EnergiaMinimaExcedidaArgs(int a)
-        {
-            this.energia = a;
-        }
         public int energia { get; set; }
+        public EnergiaMinimaExcedidaArgs(int e)
+        {
+            this.energia = e;
+        }
     }
+
     class Jugador
     {
-        public static int maxAmonestaciones { get; set;}
+        public event EventHandler<AmonestacionesMaximoExcedidoArgs> amonestacionesMaximoExcedido;
+        public event EventHandler<FaltasMaximoExcedidoArgs> faltasMaximoExcedido;
+        public event EventHandler<EnergiaMinimaExcedidaArgs> energiaMinimaExcedida;
+        public static int maxAmonestaciones { get; set; }
         public static int maxFaltas { get; set; }
         public static int minEnergia { get; set; }
         public static Random rand { private get; set; }
-        public string nombre { get; private set; }
+        private string _nombre;
+        public string nombre
+        {
+            get
+            {
+                return _nombre;
+            }
+            private set
+            {
+                _nombre = value;
+            }
+        }
         public int puntos { get; set; }
         private int _amonestaciones;
-        public event EventHandler<AmonestacionesMaximoExcedidoArgs> amonestacionesMaximoExcedido;
         private int amonestaciones
         {
             get { return _amonestaciones; }
             set
             {
-                if (value < 0)
+                if (value > maxAmonestaciones)
+                {
+                    EventHandler<AmonestacionesMaximoExcedidoArgs> a = amonestacionesMaximoExcedido;
+                    if (amonestacionesMaximoExcedido != null && value > maxAmonestaciones)
+                    {
+                        a(this, new AmonestacionesMaximoExcedidoArgs(value));
+                    }
+                }
+                else if (value < 0)
                 {
                     _amonestaciones = 0;
-                }
-                if ( (value > maxAmonestaciones) && (amonestacionesMaximoExcedido != null) )
-                {
-                    _amonestaciones = value;
-                    amonestacionesMaximoExcedido(this, new AmonestacionesMaximoExcedidoArgs(value));
                 }
                 else
                 {
                     _amonestaciones = value;
                 }
             }
-                        
         }
+
         private int _faltas;
-        public event EventHandler<FaltasMaximoExcedidoArgs> faltasMaximoExcedido;
         private int faltas
         {
             get { return _faltas; }
             set
             {
-                if ( (value > maxFaltas) && (faltasMaximoExcedido != null) )
+                if (value > maxFaltas)
                 {
-                    _faltas = value;
-                    faltasMaximoExcedido(this, new FaltasMaximoExcedidoArgs(value));
+                    EventHandler<FaltasMaximoExcedidoArgs> f = faltasMaximoExcedido;
+                    if (faltasMaximoExcedido != null && value > maxFaltas)
+                    {
+                        f(this, new FaltasMaximoExcedidoArgs(value));
+                    }
                 }
                 else
                 {
@@ -80,32 +99,34 @@ namespace Hada
             }
         }
         private int _energia;
-        public event EventHandler<EnergiaMinimaExcedidaArgs> energiaMinimaExcedida;
         private int energia
         {
             get { return _energia; }
             set
             {
-                if ( value < 0 )
+                if (value < minEnergia)
+                {
+                    EventHandler<EnergiaMinimaExcedidaArgs> e = energiaMinimaExcedida;
+                    if (energiaMinimaExcedida != null && value > minEnergia)
+                    {
+                        e(this, new EnergiaMinimaExcedidaArgs(value));
+                    }
+                }
+                if (_energia < 0)
                 {
                     _energia = 0;
                 }
-                if ( value > 100 )
+                else if (_energia > 100)
                 {
                     _energia = 100;
-                }
-                if ( (value < minEnergia) && (energiaMinimaExcedida != null) )
-                {
-                    _energia = value;
-                    energiaMinimaExcedida(this, new EnergiaMinimaExcedidaArgs(value));
                 }
                 else
                 {
                     _energia = value;
                 }
             }
-         }
-        public Jugador ( string nombre, int amonestaciones, int faltas, int energia, int puntos)
+        }
+        public Jugador(string nombre, int amonestaciones, int faltas, int energia, int puntos)
         {
             this.nombre = nombre;
             this.amonestaciones = amonestaciones;
@@ -116,46 +137,53 @@ namespace Hada
         public void incAmonestaciones()
         {
             int incremento = rand.Next(0, 3);
-            _amonestaciones += incremento;
+            amonestaciones += incremento;
         }
         public void incFaltas()
         {
             int incremento = rand.Next(0, 4);
-            _faltas += incremento;
+            faltas += incremento;
         }
         public void decEnergia()
         {
-            int decremento = rand.Next(0, 8);
-            _energia -= decremento;
+            int decremento = rand.Next(1, 8);
+            energia -= decremento;
         }
         public void incPuntos()
         {
             int incremento = rand.Next(0, 4);
-            this.puntos += incremento;
+            puntos += incremento;
         }
         public bool todoOk()
         {
-            if( (amonestaciones <= maxAmonestaciones) && (faltas <= maxFaltas) && (energia >= minEnergia))
+            bool ok = false;
+
+            if ((amonestaciones <= maxAmonestaciones) && (faltas <= maxAmonestaciones) && (energia >= minEnergia))
             {
-                return true;
+                ok = true;
             }
-            else
-            {
-                return false;
-            }
+            return ok;
         }
         public void mover()
         {
-            if(this.todoOk())
+            if (this.todoOk())
             {
                 this.incAmonestaciones();
                 this.incFaltas();
                 this.decEnergia();
+                this.incPuntos();
             }
         }
         public override string ToString()
         {
-            return "Puntos: " + this.puntos + "; Amonestaciones: " + this.amonestaciones + "; Faltas: " + this.faltas + "; Energía: " + this.energia + "%; Ok: " + this.todoOk() + "\n";
+            string output = "[" + nombre + "]" + " Puntos: " + puntos +
+                             "; Amonestaciones: " + amonestaciones +
+                             " ;Faltas: " + faltas +
+                             "; Energia: " + energia + "%; "
+                             + "Ok: " + todoOk();
+            return output;
         }
+
     }
+
 }
